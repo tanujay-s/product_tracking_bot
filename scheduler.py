@@ -11,20 +11,19 @@ HEADERS = {
             "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36"
         }
 
-def is_shopify(url):
-    try:
-        res = requests.get(url + ".json", timeout=5)
-        return res.status_code == 200
-    except:
-        return False
+# def is_shopify(url):
+#     try:
+#         res = requests.get(url + ".json", timeout=5)
+#         return res.status_code == 200
+#     except:
+#         return False
     
 def check_product_url(url):
     try:
-        if is_shopify(url):
-            stock, price = check_product_api(url)
+        stock, price = check_product_api(url)
 
-            if stock is not None and price is not None:
-                return stock, price
+        if stock is not None and price is not None:
+            return stock, price
 
     except Exception as e:
         print("Shopify API failed:", e)
