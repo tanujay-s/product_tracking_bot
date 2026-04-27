@@ -3,6 +3,13 @@ import requests
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 import os
+from user import (
+    create_user,
+    get_user
+)
+from product import (
+    add_product
+)
 
 load_dotenv()
 
@@ -31,6 +38,13 @@ def webhook():
     parts = text.strip().split()
 
     if parts[0] == "/start":
+
+        user = message.get("from", {})
+        user_id = user.get("id")
+        username = user.get("username") or user.get("first_name")
+
+        create_user(user_id, username)
+
         send_telegram(chat_id,
             "👋 Welcome!\n\n"
             "I help you check products pricing and stock status in real-time \n"
@@ -48,34 +62,29 @@ def webhook():
         return "ok", 200
 
     url = parts[1]
+    user = message.get("from", {})
+    user_id = user.get("id")
+    # username = user.get("username") or user.get("first_name")
+    db_user = get_user(user_id)
+
+    if not db_user:
+        print("User not found")
+        return "ok", 200
+
+    db_user_id = db_user[0]
 
     if not url.startswith("http"):
         send_telegram(chat_id, "Invalid link. Must start with http/https")
         return "ok", 200
 
-    print("🔗 URL:", url)
-
-    try:
-        response = requests.get(url, timeout=10)
-        soup = BeautifulSoup(response.text, "html.parser")
-        page_text = soup.get_text()
-
-        title = soup.title.string if soup.title else "Product"
-
-        if "Out Of Stock" in page_text or "NOTIFY ME" in page_text:
-            status = "OUT OF STOCK"
-        else:
-            status = "IN STOCK"
-
-        send_telegram(chat_id, f"{title}\n{status}")
-
-    except Exception as e:
-        print("Error:", e)
-        send_telegram(chat_id, "Error fetching product")
-
+    print("URL:", url)
+    add_product(db_user_id, url, 5) 
+    send_telegram(chat_id, "✅ Product added successfully!")
     return "ok", 200
+    
 
 def send_telegram(chat_id, msg):
+    print(chat_id, msg)
     requests.post(
         f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage",
         json={"chat_id": chat_id, "text": msg}
