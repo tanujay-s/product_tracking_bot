@@ -162,7 +162,7 @@ def run_scheduler():
             except Exception as e:
                 print("❌ Error processing product:", e)
 
-        time.sleep(60)
+        time.sleep(3600)
 
 
 if __name__ == "__main__":
